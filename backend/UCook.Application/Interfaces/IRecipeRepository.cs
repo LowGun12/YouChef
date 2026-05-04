@@ -11,4 +11,5 @@ public interface IRecipeRepository
     Task<bool> IsSavedAsync(Guid userId, Guid recipeId);
     Task SaveAsync(Guid userId, Guid recipeId);
     Task UnsaveAsync(Guid userId, Guid recipeId);
+    Task<Recipe> CreateAsync(Recipe recipe);
 }

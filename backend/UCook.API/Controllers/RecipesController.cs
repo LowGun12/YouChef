@@ -56,4 +56,12 @@ public class RecipesController(IRecipeService recipeService) : ControllerBase
         await recipeService.UnsaveRecipeAsync(UserId!.Value, id);
         return NoContent();
     }
+
+    [HttpPost]
+    [Authorize]
+    public async Task<ActionResult<RecipeDto>> Create([FromBody] CreateRecipeRequest req)
+    {
+        var recipe = await recipeService.CreateAsync(req);
+        return CreatedAtAction(nameof(GetById), new { id = recipe.Id }, recipe);
+    }
 }

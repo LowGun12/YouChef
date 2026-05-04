@@ -130,6 +130,32 @@ export interface BarcodeResult {
   category?: IngredientCategory
 }
 
+export interface CreateRecipeIngredient {
+  name: string
+  quantity: number
+  unit: string
+  optional: boolean
+}
+
+export interface CreateRecipeStep {
+  description: string
+  duration?: number
+}
+
+export interface CreateRecipeRequest {
+  title: string
+  description: string
+  imageUrl?: string
+  prepTime: number
+  cookTime: number
+  servings: number
+  difficulty: 'easy' | 'medium' | 'hard'
+  cuisine: string
+  tags: string[]
+  ingredients: CreateRecipeIngredient[]
+  steps: CreateRecipeStep[]
+}
+
 // ── Common ────────────────────────────────────────────────────────────────────
 
 export interface ApiError {

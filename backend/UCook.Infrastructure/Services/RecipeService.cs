@@ -38,6 +38,50 @@ public class RecipeService(IRecipeRepository recipes, IPantryRepository pantry) 
     public Task UnsaveRecipeAsync(Guid userId, Guid recipeId) =>
         recipes.UnsaveAsync(userId, recipeId);
 
+    public async Task<RecipeDto> CreateAsync(CreateRecipeRequest req)
+    {
+        var recipe = new Recipe
+        {
+            Title = req.Title,
+            Description = req.Description,
+            ImageUrl = string.IsNullOrWhiteSpace(req.ImageUrl) ? null : req.ImageUrl,
+            PrepTime = req.PrepTime,
+            CookTime = req.CookTime,
+            Servings = req.Servings,
+            Difficulty = req.Difficulty,
+            Cuisine = req.Cuisine,
+            TagsJson = JsonSerializer.Serialize(req.Tags),
+        };
+
+        for (int i = 0; i < req.Ingredients.Count; i++)
+        {
+            var ing = req.Ingredients[i];
+            recipe.Ingredients.Add(new RecipeIngredient
+            {
+                Name = ing.Name,
+                Quantity = ing.Quantity,
+                Unit = ing.Unit,
+                Optional = ing.Optional,
+                RecipeId = recipe.Id,
+            });
+        }
+
+        for (int i = 0; i < req.Steps.Count; i++)
+        {
+            var step = req.Steps[i];
+            recipe.Steps.Add(new RecipeStep
+            {
+                Order = i + 1,
+                Description = step.Description,
+                Duration = step.Duration,
+                RecipeId = recipe.Id,
+            });
+        }
+
+        await recipes.CreateAsync(recipe);
+        return ToDto(recipe);
+    }
+
     private static RecipeMatchDto BuildMatch(Recipe recipe, List<string> pantryNames)
     {
         var required = recipe.Ingredients.Where(i => !i.Optional).ToList();

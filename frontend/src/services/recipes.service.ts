@@ -1,5 +1,5 @@
 import client from './client'
-import type { Recipe, RecipeMatch, PaginatedResponse } from '@/types'
+import type { Recipe, RecipeMatch, PaginatedResponse, CreateRecipeRequest } from '@/types'
 
 export interface RecipeFilters {
   search?: string
@@ -30,4 +30,7 @@ export const recipesService = {
 
   unsaveRecipe: (recipeId: string) =>
     client.delete(`/recipes/${recipeId}/save`).then((r) => r.data),
+
+  createRecipe: (data: CreateRecipeRequest) =>
+    client.post<Recipe>('/recipes', data).then((r) => r.data),
 }

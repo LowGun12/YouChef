@@ -10,4 +10,5 @@ public interface IRecipeService
     Task<List<RecipeDto>> GetSavedAsync(Guid userId);
     Task SaveRecipeAsync(Guid userId, Guid recipeId);
     Task UnsaveRecipeAsync(Guid userId, Guid recipeId);
+    Task<RecipeDto> CreateAsync(CreateRecipeRequest req);
 }

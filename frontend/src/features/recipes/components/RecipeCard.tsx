@@ -108,7 +108,7 @@ export default function RecipeCard({ match, saved = false, onToggleSave }: Recip
         </div>
 
         {/* Ingredient status */}
-        {haveIngredients.length > 0 && (
+        {(haveIngredients.length > 0 || missingIngredients.length > 0) && (
           <div className="flex flex-wrap gap-1">
             {haveIngredients.slice(0, 3).map((name) => (
               <span key={name} className="ingredient-tag ingredient-tag--have">

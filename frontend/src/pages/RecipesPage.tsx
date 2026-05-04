@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, SlidersHorizontal, BookOpen, CheckCircle2, X } from 'lucide-react'
+import { Search, BookOpen, CheckCircle2, X, Plus } from 'lucide-react'
 import { usePantryStore } from '@/stores/pantryStore'
 import { buildRecipeMatches, mockPantryItems, mockRecipes } from '@/utils/mockData'
 import RecipeCard, { RecipeCardSkeleton } from '@/features/recipes/components/RecipeCard'
@@ -52,11 +52,18 @@ export default function RecipesPage() {
   return (
     <div className="animate-fade-in">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-extrabold text-text-primary mb-1">Recipes</h1>
-        <p className="text-sm text-text-secondary">
-          {canMakeCount} recipe{canMakeCount !== 1 ? 's' : ''} you can cook right now
-        </p>
+      <div className="section-header mb-6">
+        <div>
+          <h1 className="text-2xl font-extrabold text-text-primary mb-1">Recipes</h1>
+          <p className="text-sm text-text-secondary">
+            {canMakeCount} recipe{canMakeCount !== 1 ? 's' : ''} you can cook right now
+          </p>
+        </div>
+        <Link to="/recipes/new">
+          <Button variant="primary" size="sm" icon={<Plus size={15} />}>
+            New Recipe
+          </Button>
+        </Link>
       </div>
 
       {/* Search + filters */}

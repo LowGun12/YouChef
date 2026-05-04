@@ -37,3 +37,19 @@ public record RecipeMatchDto(
 );
 
 public record RecipeListResponse(List<RecipeDto> Items, int TotalCount, int Page, int PageSize);
+
+public record CreateIngredientRequest(string Name, double Quantity, string Unit, bool Optional = false);
+public record CreateStepRequest(string Description, int? Duration);
+public record CreateRecipeRequest(
+    string Title,
+    string Description,
+    string? ImageUrl,
+    int PrepTime,
+    int CookTime,
+    int Servings,
+    string Difficulty,
+    string Cuisine,
+    List<string> Tags,
+    List<CreateIngredientRequest> Ingredients,
+    List<CreateStepRequest> Steps
+);

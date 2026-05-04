@@ -71,4 +71,11 @@ public class RecipeRepository(AppDbContext db) : IRecipeRepository
             await db.SaveChangesAsync();
         }
     }
+
+    public async Task<Recipe> CreateAsync(Recipe recipe)
+    {
+        db.Recipes.Add(recipe);
+        await db.SaveChangesAsync();
+        return recipe;
+    }
 }

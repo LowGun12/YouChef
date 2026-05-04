@@ -9,6 +9,7 @@ import DashboardPage from '@/pages/DashboardPage'
 import PantryPage from '@/pages/PantryPage'
 import RecipesPage from '@/pages/RecipesPage'
 import RecipeDetailPage from '@/pages/RecipeDetailPage'
+import CreateRecipePage from '@/pages/CreateRecipePage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +35,7 @@ export default function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/pantry" element={<PantryPage />} />
             <Route path="/recipes" element={<RecipesPage />} />
+            <Route path="/recipes/new" element={<CreateRecipePage />} />
             <Route path="/recipes/:id" element={<RecipeDetailPage />} />
           </Route>
 
