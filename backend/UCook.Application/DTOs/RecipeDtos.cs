@@ -11,6 +11,8 @@ public record RecipeDto(
     string Difficulty,
     string Cuisine,
     List<string> Tags,
+    List<string> Allergens,
+    List<string> Dietary,
     List<RecipeIngredientDto> Ingredients,
     List<RecipeStepDto> Instructions,
     DateTime CreatedAt
@@ -50,6 +52,8 @@ public record CreateRecipeRequest(
     string Difficulty,
     string Cuisine,
     List<string> Tags,
+    List<string> Allergens,
+    List<string> Dietary,
     List<CreateIngredientRequest> Ingredients,
     List<CreateStepRequest> Steps
 );

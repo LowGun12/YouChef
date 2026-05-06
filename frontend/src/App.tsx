@@ -10,6 +10,7 @@ import PantryPage from '@/pages/PantryPage'
 import RecipesPage from '@/pages/RecipesPage'
 import RecipeDetailPage from '@/pages/RecipeDetailPage'
 import CreateRecipePage from '@/pages/CreateRecipePage'
+import OnboardingPage from '@/pages/OnboardingPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/onboarding" element={<OnboardingPage />} />
 
           {/* Protected — Layout handles auth redirect */}
           <Route element={<Layout />}>

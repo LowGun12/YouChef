@@ -17,6 +17,8 @@ public static class DbSeeder
                 "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=800&auto=format&fit=crop",
                 5, 15, 2, "easy", "Italian",
                 ["pasta", "vegetarian", "quick"],
+                allergens: ["wheat"],
+                dietary: ["vegetarian"],
                 [("Pasta", 200, "g", false), ("Garlic", 4, "cloves", false), ("Olive Oil", 60, "ml", false), ("Red Chili Flakes", 1, "tsp", true), ("Parsley", 2, "tbsp", true)],
                 [
                     (1, "Bring salted water to boil. Cook pasta al dente.", 10),
@@ -31,6 +33,8 @@ public static class DbSeeder
                 "https://images.unsplash.com/photo-1512058564366-18510be2db19?w=800&auto=format&fit=crop",
                 10, 15, 2, "easy", "Asian",
                 ["chicken", "quick", "healthy"],
+                allergens: ["soy"],
+                dietary: [],
                 [("Chicken Breast", 300, "g", false), ("Tomatoes", 3, "pcs", false), ("Onion", 1, "pc", false), ("Garlic", 3, "cloves", false), ("Soy Sauce", 2, "tbsp", false)],
                 [
                     (1, "Slice chicken into strips. Season.", null),
@@ -46,6 +50,8 @@ public static class DbSeeder
                 "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=800&auto=format&fit=crop",
                 2, 8, 1, "easy", "American",
                 ["breakfast", "eggs", "quick"],
+                allergens: ["eggs", "milk"],
+                dietary: ["vegetarian"],
                 [("Eggs", 3, "pcs", false), ("Cheddar Cheese", 40, "g", false), ("Butter", 1, "tbsp", false), ("Chives", 1, "tbsp", true)],
                 [
                     (1, "Whisk eggs with a pinch of salt.", null),
@@ -64,6 +70,8 @@ public static class DbSeeder
         string title, string desc, string? imageUrl,
         int prep, int cook, int servings, string difficulty, string cuisine,
         string[] tags,
+        string[] allergens,
+        string[] dietary,
         (string name, double qty, string unit, bool optional)[] ingredients,
         (int order, string desc, int? duration)[] steps)
     {
@@ -78,6 +86,8 @@ public static class DbSeeder
             Difficulty = difficulty,
             Cuisine = cuisine,
             TagsJson = System.Text.Json.JsonSerializer.Serialize(tags),
+            AllergensJson = System.Text.Json.JsonSerializer.Serialize(allergens),
+            DietaryJson = System.Text.Json.JsonSerializer.Serialize(dietary),
         };
 
         foreach (var (name, qty, unit, optional) in ingredients)

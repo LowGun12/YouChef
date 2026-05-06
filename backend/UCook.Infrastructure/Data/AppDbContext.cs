@@ -11,6 +11,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
     public DbSet<RecipeStep> RecipeSteps => Set<RecipeStep>();
     public DbSet<SavedRecipe> SavedRecipes => Set<SavedRecipe>();
+    public DbSet<UserPreferences> UserPreferences => Set<UserPreferences>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
@@ -42,6 +43,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         mb.Entity<SavedRecipe>()
             .HasIndex(s => new { s.UserId, s.RecipeId })
+            .IsUnique();
+
+        mb.Entity<UserPreferences>()
+            .HasOne(p => p.User)
+            .WithOne(u => u.Preferences)
+            .HasForeignKey<UserPreferences>(p => p.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        mb.Entity<UserPreferences>()
+            .HasIndex(p => p.UserId)
             .IsUnique();
     }
 }

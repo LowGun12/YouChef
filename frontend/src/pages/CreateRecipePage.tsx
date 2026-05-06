@@ -13,6 +13,7 @@ import Input from '@/components/ui/Input'
 import { recipesService } from '@/services/recipes.service'
 import { parseRecipeText } from '@/utils/recipeParser'
 import { cn } from '@/utils/cn'
+import { ALLERGENS, DIETARY_OPTIONS } from '@/types'
 
 const ingredientSchema = z.object({
   name: z.string().min(1, 'Required'),
@@ -50,6 +51,8 @@ export default function CreateRecipePage() {
   const [mode, setMode] = useState<'form' | 'paste'>('form')
   const [pasteText, setPasteText] = useState('')
   const [apiError, setApiError] = useState('')
+  const [selectedAllergens, setSelectedAllergens] = useState<string[]>([])
+  const [selectedDietary, setSelectedDietary] = useState<string[]>([])
 
   const {
     register,
@@ -117,6 +120,8 @@ export default function CreateRecipePage() {
         difficulty: data.difficulty,
         cuisine: data.cuisine,
         tags,
+        allergens: selectedAllergens,
+        dietary: selectedDietary,
         ingredients: data.ingredients,
         steps: data.steps.map((s) => ({
           description: s.description,
@@ -327,6 +332,69 @@ Instructions:
                   placeholder="e.g. pasta, vegetarian, quick"
                   {...register('tagsRaw')}
                 />
+              </section>
+
+              {/* ── Allergens & Dietary ── */}
+              <section className="bg-bg-surface border border-border rounded-2xl p-5 space-y-5">
+                <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Allergens & Dietary</h2>
+
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Contains allergens
+                    <span className="ml-1.5 text-xs font-normal text-text-muted">(select all that apply)</span>
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {ALLERGENS.map((a) => {
+                      const isOn = selectedAllergens.includes(a)
+                      return (
+                        <button
+                          key={a}
+                          type="button"
+                          onClick={() => setSelectedAllergens(
+                            isOn ? selectedAllergens.filter((x) => x !== a) : [...selectedAllergens, a]
+                          )}
+                          className={cn(
+                            'px-3 py-1.5 rounded-full border text-xs font-medium capitalize transition-all',
+                            isOn
+                              ? 'bg-red-500/15 text-red-400 border-red-500/30'
+                              : 'bg-bg-elevated text-text-muted border-border hover:border-border-strong',
+                          )}
+                        >
+                          {a}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Dietary labels
+                    <span className="ml-1.5 text-xs font-normal text-text-muted">(select all that apply)</span>
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {DIETARY_OPTIONS.map((d) => {
+                      const isOn = selectedDietary.includes(d)
+                      return (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => setSelectedDietary(
+                            isOn ? selectedDietary.filter((x) => x !== d) : [...selectedDietary, d]
+                          )}
+                          className={cn(
+                            'px-3 py-1.5 rounded-full border text-xs font-medium capitalize transition-all',
+                            isOn
+                              ? 'bg-green-500/15 text-green-400 border-green-500/30'
+                              : 'bg-bg-elevated text-text-muted border-border hover:border-border-strong',
+                          )}
+                        >
+                          {d}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
               </section>
 
               {/* ── Ingredients ── */}

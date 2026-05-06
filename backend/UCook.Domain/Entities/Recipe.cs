@@ -12,6 +12,8 @@ public class Recipe
     public string Difficulty { get; set; } = "easy";
     public string Cuisine { get; set; } = string.Empty;
     public string TagsJson { get; set; } = "[]";
+    public string AllergensJson { get; set; } = "[]";
+    public string DietaryJson { get; set; } = "[]";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<RecipeIngredient> Ingredients { get; set; } = new List<RecipeIngredient>();

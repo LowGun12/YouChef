@@ -43,7 +43,7 @@ export default function RegisterPage() {
         password: data.password,
       })
       setAuth(user, token)
-      navigate('/dashboard')
+      navigate('/onboarding')
     } catch (err: any) {
       setApiError(err.message ?? 'Registration failed. Please try again.')
     }

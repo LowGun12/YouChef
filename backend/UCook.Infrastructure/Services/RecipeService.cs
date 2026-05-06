@@ -5,7 +5,10 @@ using UCook.Domain.Entities;
 
 namespace UCook.Infrastructure.Services;
 
-public class RecipeService(IRecipeRepository recipes, IPantryRepository pantry) : IRecipeService
+public class RecipeService(
+    IRecipeRepository recipes,
+    IPantryRepository pantry,
+    IUserPreferencesRepository preferences) : IRecipeService
 {
     public async Task<RecipeListResponse> GetAllAsync(string? search, string? cuisine, string? difficulty, int page, int pageSize)
     {
@@ -23,7 +26,21 @@ public class RecipeService(IRecipeRepository recipes, IPantryRepository pantry) 
     {
         var pantryNames = await pantry.GetItemNamesAsync(userId);
         var allRecipes = await recipes.GetAllWithIngredientsAsync();
-        return allRecipes.Select(r => BuildMatch(r, pantryNames)).ToList();
+
+        // Apply allergen filtering based on user preferences
+        var userPrefs = await preferences.GetByUserIdAsync(userId);
+        var userAllergens = userPrefs is null
+            ? new List<string>()
+            : Deserialize(userPrefs.AllergiesJson);
+
+        var filtered = allRecipes.Where(r =>
+        {
+            if (userAllergens.Count == 0) return true;
+            var recipeAllergens = Deserialize(r.AllergensJson);
+            return !recipeAllergens.Any(a => userAllergens.Contains(a, StringComparer.OrdinalIgnoreCase));
+        });
+
+        return filtered.Select(r => BuildMatch(r, pantryNames)).ToList();
     }
 
     public async Task<List<RecipeDto>> GetSavedAsync(Guid userId)
@@ -51,6 +68,8 @@ public class RecipeService(IRecipeRepository recipes, IPantryRepository pantry) 
             Difficulty = req.Difficulty,
             Cuisine = req.Cuisine,
             TagsJson = JsonSerializer.Serialize(req.Tags),
+            AllergensJson = JsonSerializer.Serialize(req.Allergens ?? []),
+            DietaryJson = JsonSerializer.Serialize(req.Dietary ?? []),
         };
 
         for (int i = 0; i < req.Ingredients.Count; i++)
@@ -105,9 +124,17 @@ public class RecipeService(IRecipeRepository recipes, IPantryRepository pantry) 
     private static RecipeDto ToDto(Recipe r) => new(
         r.Id, r.Title, r.Description, r.ImageUrl,
         r.PrepTime, r.CookTime, r.Servings, r.Difficulty, r.Cuisine,
-        JsonSerializer.Deserialize<List<string>>(r.TagsJson) ?? [],
+        Deserialize(r.TagsJson),
+        Deserialize(r.AllergensJson),
+        Deserialize(r.DietaryJson),
         r.Ingredients.Select(i => new RecipeIngredientDto(i.Id, i.Name, i.Quantity, i.Unit, i.Optional)).ToList(),
         r.Steps.OrderBy(s => s.Order).Select(s => new RecipeStepDto(s.Order, s.Description, s.Duration)).ToList(),
         r.CreatedAt
     );
+
+    private static List<string> Deserialize(string json)
+    {
+        try { return JsonSerializer.Deserialize<List<string>>(json) ?? []; }
+        catch { return []; }
+    }
 }

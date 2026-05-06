@@ -10,4 +10,5 @@ public class User
 
     public ICollection<PantryItem> PantryItems { get; set; } = new List<PantryItem>();
     public ICollection<SavedRecipe> SavedRecipes { get; set; } = new List<SavedRecipe>();
+    public UserPreferences? Preferences { get; set; }
 }

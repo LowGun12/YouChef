@@ -23,6 +23,8 @@ export const mockRecipes: Recipe[] = [
     difficulty: 'easy',
     cuisine: 'Italian',
     tags: ['pasta', 'vegetarian', 'quick'],
+    allergens: ['wheat'],
+    dietary: ['vegetarian'],
     ingredients: [
       { id: 'i1', name: 'Pasta', quantity: 200, unit: 'g', optional: false },
       { id: 'i2', name: 'Garlic', quantity: 4, unit: 'cloves', optional: false },
@@ -50,6 +52,8 @@ export const mockRecipes: Recipe[] = [
     difficulty: 'easy',
     cuisine: 'Asian',
     tags: ['chicken', 'quick', 'healthy'],
+    allergens: ['soy'],
+    dietary: [],
     ingredients: [
       { id: 'i1', name: 'Chicken Breast', quantity: 300, unit: 'g', optional: false },
       { id: 'i2', name: 'Tomatoes', quantity: 3, unit: 'pcs', optional: false },
@@ -79,6 +83,8 @@ export const mockRecipes: Recipe[] = [
     difficulty: 'easy',
     cuisine: 'American',
     tags: ['breakfast', 'eggs', 'quick'],
+    allergens: ['eggs', 'milk'],
+    dietary: ['vegetarian'],
     ingredients: [
       { id: 'i1', name: 'Eggs', quantity: 3, unit: 'pcs', optional: false },
       { id: 'i2', name: 'Cheddar Cheese', quantity: 40, unit: 'g', optional: false },
@@ -105,6 +111,8 @@ export const mockRecipes: Recipe[] = [
     difficulty: 'medium',
     cuisine: 'Italian',
     tags: ['pasta', 'chicken', 'comfort'],
+    allergens: ['wheat', 'milk'],
+    dietary: [],
     ingredients: [
       { id: 'i1', name: 'Pasta', quantity: 300, unit: 'g', optional: false },
       { id: 'i2', name: 'Chicken Breast', quantity: 400, unit: 'g', optional: false },
@@ -134,6 +142,8 @@ export const mockRecipes: Recipe[] = [
     difficulty: 'easy',
     cuisine: 'Italian',
     tags: ['salad', 'vegetarian', 'no-cook'],
+    allergens: ['milk'],
+    dietary: ['vegetarian'],
     ingredients: [
       { id: 'i1', name: 'Tomatoes', quantity: 3, unit: 'pcs', optional: false },
       { id: 'i2', name: 'Mozzarella', quantity: 200, unit: 'g', optional: false },
@@ -161,6 +171,8 @@ export const mockRecipes: Recipe[] = [
     difficulty: 'easy',
     cuisine: 'Middle Eastern',
     tags: ['breakfast', 'eggs', 'vegetarian'],
+    allergens: ['eggs'],
+    dietary: ['vegetarian', 'dairy-free'],
     ingredients: [
       { id: 'i1', name: 'Eggs', quantity: 4, unit: 'pcs', optional: false },
       { id: 'i2', name: 'Tomatoes', quantity: 4, unit: 'pcs', optional: false },

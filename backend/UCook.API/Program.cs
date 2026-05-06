@@ -39,11 +39,13 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPantryRepository, PantryRepository>();
 builder.Services.AddScoped<IRecipeRepository, RecipeRepository>();
+builder.Services.AddScoped<IUserPreferencesRepository, UserPreferencesRepository>();
 
 // ── Application services ──────────────────────────────────────────────────────
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPantryService, PantryService>();
 builder.Services.AddScoped<IRecipeService, RecipeService>();
+builder.Services.AddScoped<IUserPreferencesService, UserPreferencesService>();
 
 // ── API ───────────────────────────────────────────────────────────────────────
 builder.Services.AddControllers();
@@ -79,6 +81,22 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.EnsureCreatedAsync();
+
+    // Safe schema upgrades for existing SQLite databases (idempotent)
+    try { await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Recipes\" ADD COLUMN \"AllergensJson\" TEXT NOT NULL DEFAULT '[]'"); } catch { }
+    try { await db.Database.ExecuteSqlRawAsync("ALTER TABLE \"Recipes\" ADD COLUMN \"DietaryJson\" TEXT NOT NULL DEFAULT '[]'"); } catch { }
+    await db.Database.ExecuteSqlRawAsync(@"
+        CREATE TABLE IF NOT EXISTS ""UserPreferences"" (
+            ""Id"" TEXT NOT NULL CONSTRAINT ""PK_UserPreferences"" PRIMARY KEY,
+            ""UserId"" TEXT NOT NULL,
+            ""AllergiesJson"" TEXT NOT NULL DEFAULT '[]',
+            ""DietaryJson"" TEXT NOT NULL DEFAULT '[]',
+            ""CuisinePrefsJson"" TEXT NOT NULL DEFAULT '[]',
+            ""OnboardingComplete"" INTEGER NOT NULL DEFAULT 0,
+            CONSTRAINT ""FK_UserPreferences_Users_UserId"" FOREIGN KEY (""UserId"") REFERENCES ""Users"" (""Id"") ON DELETE CASCADE
+        )");
+    try { await db.Database.ExecuteSqlRawAsync(@"CREATE UNIQUE INDEX ""IX_UserPreferences_UserId"" ON ""UserPreferences"" (""UserId"")"); } catch { }
+
     await DbSeeder.SeedAsync(db);
 }
 

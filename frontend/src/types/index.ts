@@ -62,6 +62,36 @@ export interface AddPantryItemRequest {
   barcode?: string
 }
 
+// ── Preferences ──────────────────────────────────────────────────────────────
+
+export const ALLERGENS = [
+  'peanuts', 'tree-nuts', 'milk', 'eggs', 'wheat', 'soy', 'fish', 'shellfish', 'sesame',
+] as const
+export type Allergen = (typeof ALLERGENS)[number]
+
+export const DIETARY_OPTIONS = [
+  'vegetarian', 'vegan', 'gluten-free', 'dairy-free', 'nut-free', 'halal', 'kosher', 'keto', 'paleo',
+] as const
+export type DietaryOption = (typeof DIETARY_OPTIONS)[number]
+
+export const CUISINE_OPTIONS = [
+  'Italian', 'Asian', 'American', 'Middle Eastern', 'Mexican',
+  'French', 'Indian', 'British', 'Greek', 'Spanish', 'Japanese', 'Mediterranean',
+] as const
+
+export interface UserPreferences {
+  allergies: string[]
+  dietary: string[]
+  cuisinePrefs: string[]
+  onboardingComplete: boolean
+}
+
+export interface SavePreferencesRequest {
+  allergies: string[]
+  dietary: string[]
+  cuisinePrefs: string[]
+}
+
 // ── Recipes ──────────────────────────────────────────────────────────────────
 
 export interface Recipe {
@@ -75,6 +105,8 @@ export interface Recipe {
   difficulty: 'easy' | 'medium' | 'hard'
   cuisine: string
   tags: string[]
+  allergens: string[]
+  dietary: string[]
   ingredients: RecipeIngredient[]
   instructions: RecipeStep[]
   nutrition?: NutritionInfo
@@ -152,6 +184,8 @@ export interface CreateRecipeRequest {
   difficulty: 'easy' | 'medium' | 'hard'
   cuisine: string
   tags: string[]
+  allergens: string[]
+  dietary: string[]
   ingredients: CreateRecipeIngredient[]
   steps: CreateRecipeStep[]
 }
