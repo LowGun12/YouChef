@@ -13,6 +13,9 @@ backend/**/*.db-shm
 backend/**/*.db-wal
 backend/UCook.API/appsettings.Development.json
 
+# ── Agent config ─────────────────────────────────────────────────────────────
+AGENT.md
+
 # ── IDE / OS ──────────────────────────────────────────────────────────────────
 .vscode/
 .idea/
