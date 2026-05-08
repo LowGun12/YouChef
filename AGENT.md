@@ -1,17 +1,21 @@
-# UCook Agent Configuration
+# YouChef Agent Configuration
 
 ## Purpose
 
-This file defines engineering standards, architecture, and project structure for UCook.
+This file defines engineering standards, architecture, and project structure for YouChef.
+
+All generated code must meet **production standard** — the same bar expected at a professional software company. This is not a prototype or learning project. Every decision should reflect how senior engineers build real products.
 
 All generated code must prioritise:
 
-- Maintainability
-- Scalability
-- Readability
-- Separation of concerns
+- Production quality — no shortcuts, no placeholders, no "good enough for now"
+- Performance — use the most efficient method available; avoid unnecessary queries, loops, re-renders, or allocations
+- Maintainability — code should be immediately understandable to another senior engineer
+- Scalability — design for growth; avoid patterns that break under load
+- Separation of concerns — each layer does one thing and does it well
+- Security — validate all input, never trust the client, protect all endpoints appropriately
 
-The system must be designed to support increasing complexity over time.
+The system must be designed to support increasing complexity over time without requiring rewrites.
 
 ---
 
@@ -170,11 +174,80 @@ Do not introduce new colours.
 
 ## Code Quality Rules
 
-- Use clear, descriptive naming
-- Avoid duplication
-- Prefer simple solutions over complex ones
-- Keep functions small and focused
-- Write modular and testable code
+- Use clear, descriptive naming — no abbreviations, no single-letter variables outside loops
+- Avoid duplication — extract shared logic into utilities, hooks, or services
+- Prefer the simplest solution that is also correct and scalable
+- Keep functions small and focused — one responsibility per function
+- Write modular and testable code — every unit of logic should be independently testable
+- No dead code, no commented-out blocks, no TODO comments left in committed code
+- Prefer explicit over implicit — make intent obvious from the code itself
+
+---
+
+## Performance Standards
+
+### Backend
+- Use `async`/`await` correctly — never block threads, never use `.Result` or `.Wait()`
+- Use `IQueryable` and projection (`Select`) to avoid over-fetching from the database
+- Never load entire entity graphs when only a subset of fields is needed
+- Use `AsNoTracking()` for read-only queries
+- Avoid N+1 queries — use `Include()` or batch queries appropriately
+- Index frequently queried columns in the database
+
+### Frontend
+- Use `useMemo` and `useCallback` where recomputation is expensive
+- Never derive state inside render that could be memoised
+- Use React Query for all server state — no `useEffect` + `useState` for data fetching
+- Invalidate only the specific query keys affected by a mutation
+- Prefer optimistic updates for actions that are unlikely to fail (pantry add/remove)
+- Avoid prop drilling beyond 2 levels — lift to store or context
+
+---
+
+## Security Standards
+
+- Validate all inputs server-side regardless of client-side validation
+- Never expose internal error messages or stack traces to the client
+- All protected endpoints must require a valid JWT — no exceptions
+- Sanitise all string inputs before persisting
+- Never store secrets in source code — use environment variables
+- Rate-limit authentication endpoints
+- Use HTTPS in production
+
+---
+
+## Error Handling Standards
+
+### Backend
+- Use a global exception handling middleware — never let unhandled exceptions reach the client
+- Return consistent error response shapes: `{ message: string, errors?: Record<string, string[]> }`
+- Use appropriate HTTP status codes: 400 (validation), 401 (auth), 403 (forbidden), 404 (not found), 500 (server error)
+- Log all exceptions with structured logging (request context, user id, timestamp)
+
+### Frontend
+- Every `useQuery` and `useMutation` must handle error state explicitly — no silent failures
+- Show user-facing error messages that are actionable, not technical
+- Never expose raw API error messages directly to the UI without sanitising
+
+---
+
+## Testing Standards
+
+- All business logic in services must have unit tests
+- All API endpoints must have integration tests
+- Test edge cases, not just the happy path
+- Tests must be fast, isolated, and deterministic
+- No test should depend on external services or shared state
+
+---
+
+## Database Standards
+
+- Use proper migrations — never `EnsureCreated` in production
+- Every foreign key must have an explicit delete behaviour defined
+- Index any column used in a `WHERE`, `JOIN`, or `ORDER BY` clause
+- Never expose raw entity objects through the API — always map to DTOs
+- Use transactions for operations that modify multiple tables
 
 ---
 
@@ -183,17 +256,22 @@ Do not introduce new colours.
 - Business logic in controllers
 - API calls inside UI components
 - Deeply nested components
-- Hardcoded values
+- Hardcoded values or magic strings
 - Mixing concerns in a single file
+- `.Result` or `.Wait()` on async methods
+- `SELECT *` / over-fetching from the database
+- Catching exceptions silently with empty catch blocks
+- Using `any` type in TypeScript
+- Storing sensitive data in localStorage without encryption
 
 ---
 
 ## Extensibility Guidelines
 
-- Design features to be modular
-- Avoid tight coupling between components
-- Use interfaces and abstraction where appropriate
-- Ensure new features can be added without major refactoring
+- Design features to be modular — adding a new feature should not require modifying existing ones
+- Avoid tight coupling between components and services
+- Use interfaces and abstraction at every layer boundary
+- Ensure new features can be added without major refactoring of existing code
 
 ---
 
@@ -201,4 +279,4 @@ Do not introduce new colours.
 
 Every feature and UI element should feel **intentional**, **clean**, **modern**, and **consistent**.
 
-The final product should be portfolio-quality and visually impressive.
+The final product must be indistinguishable from production software built by a senior engineering team. Code quality, architecture decisions, and UX polish should all reflect professional standards seen at well-run software companies.
