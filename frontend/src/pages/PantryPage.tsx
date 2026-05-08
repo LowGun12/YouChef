@@ -1,20 +1,22 @@
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ScanLine, Plus, Search, Package, Trash2, X } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
+import { ScanLine, Plus, Search, Package } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { usePantryStore } from '@/stores/pantryStore'
-import { mockPantryItems } from '@/utils/mockData'
+import { pantryService } from '@/services/pantry.service'
 import PantryCard from '@/features/pantry/components/PantryCard'
 import QRScanner from '@/features/pantry/components/QRScanner'
 import Modal from '@/components/ui/Modal'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
-import Badge from '@/components/ui/Badge'
 import type { IngredientCategory, BarcodeResult } from '@/types'
 
-const CATEGORIES: IngredientCategory[] = ['produce', 'dairy', 'meat', 'grains', 'condiments', 'frozen', 'beverages', 'other']
+const CATEGORIES: IngredientCategory[] = [
+  'produce', 'dairy', 'meat', 'grains', 'condiments', 'frozen', 'beverages', 'other',
+]
 
 const addSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -26,15 +28,16 @@ const addSchema = z.object({
 type AddForm = z.infer<typeof addSchema>
 
 export default function PantryPage() {
-  const { items, setItems, addItem, removeItem } = usePantryStore()
+  const qc = useQueryClient()
+  const { items, addItem: addToStore, removeItem: removeFromStore } = usePantryStore()
+
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState<IngredientCategory | 'all'>('all')
   const [showAddModal, setShowAddModal] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
   const [scannedData, setScannedData] = useState<BarcodeResult | null>(null)
-
-  // Seed on first load
-  const pantryItems = items.length > 0 ? items : mockPantryItems
+  const [saving, setSaving] = useState(false)
+  const [removingId, setRemovingId] = useState<string | null>(null)
 
   const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<AddForm>({
     resolver: zodResolver(addSchema),
@@ -42,34 +45,56 @@ export default function PantryPage() {
   })
 
   const filtered = useMemo(() => {
-    return pantryItems.filter((item) => {
+    return items.filter((item) => {
       const matchSearch = item.name.toLowerCase().includes(search.toLowerCase())
       const matchCat = activeCategory === 'all' || item.category === activeCategory
       return matchSearch && matchCat
     })
-  }, [pantryItems, search, activeCategory])
+  }, [items, search, activeCategory])
 
   const categoryCounts = useMemo(() => {
     const counts: Partial<Record<IngredientCategory, number>> = {}
-    pantryItems.forEach((i) => {
-      counts[i.category] = (counts[i.category] ?? 0) + 1
-    })
+    items.forEach((i) => { counts[i.category] = (counts[i.category] ?? 0) + 1 })
     return counts
-  }, [pantryItems])
+  }, [items])
 
-  const onAdd = (data: AddForm) => {
-    addItem({
-      id: `local-${Date.now()}`,
-      userId: 'local',
-      name: data.name,
-      category: data.category,
-      quantity: data.quantity,
-      unit: data.unit || undefined,
-      addedAt: new Date().toISOString(),
-    })
-    if (items.length === 0) setItems([...mockPantryItems])
-    reset()
+  const closeModal = () => {
     setShowAddModal(false)
+    setScannedData(null)
+    reset()
+  }
+
+  const onAdd = async (data: AddForm) => {
+    setSaving(true)
+    try {
+      const newItem = await pantryService.addItem({
+        name: data.name,
+        category: data.category,
+        quantity: data.quantity,
+        unit: data.unit || undefined,
+      })
+      addToStore(newItem)
+      // Invalidate recipe matches so they re-fetch with new pantry
+      qc.invalidateQueries({ queryKey: ['recipes', 'matches'] })
+      closeModal()
+    } catch {
+      // Silently keep modal open — user sees the form still
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleRemove = async (id: string) => {
+    setRemovingId(id)
+    try {
+      await pantryService.removeItem(id)
+      removeFromStore(id)
+      qc.invalidateQueries({ queryKey: ['recipes', 'matches'] })
+    } catch {
+      // Failed — item stays in list
+    } finally {
+      setRemovingId(null)
+    }
   }
 
   const handleScanResult = (result: BarcodeResult) => {
@@ -82,15 +107,6 @@ export default function PantryPage() {
     }
   }
 
-  const handleRemove = (id: string) => {
-    if (items.length === 0) {
-      // Operating on mock data — seed first, then remove
-      setItems(mockPantryItems.filter((i) => i.id !== id))
-    } else {
-      removeItem(id)
-    }
-  }
-
   return (
     <div className="animate-fade-in">
       {/* Header */}
@@ -98,7 +114,7 @@ export default function PantryPage() {
         <div>
           <h1 className="text-2xl font-extrabold text-text-primary">My Pantry</h1>
           <p className="text-sm text-text-secondary mt-0.5">
-            {pantryItems.length} item{pantryItems.length !== 1 ? 's' : ''} tracked
+            {items.length} item{items.length !== 1 ? 's' : ''} tracked
           </p>
         </div>
         <div className="flex gap-2">
@@ -141,7 +157,7 @@ export default function PantryPage() {
               : 'bg-bg-surface text-text-muted border-border hover:border-border-strong'
           }`}
         >
-          All ({pantryItems.length})
+          All ({items.length})
         </button>
         {CATEGORIES.filter((c) => categoryCounts[c]).map((cat) => (
           <button
@@ -163,7 +179,12 @@ export default function PantryPage() {
         <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <AnimatePresence mode="popLayout">
             {filtered.map((item) => (
-              <PantryCard key={item.id} item={item} onRemove={handleRemove} />
+              <PantryCard
+                key={item.id}
+                item={item}
+                onRemove={handleRemove}
+                removing={removingId === item.id}
+              />
             ))}
           </AnimatePresence>
         </motion.div>
@@ -191,12 +212,14 @@ export default function PantryPage() {
       {/* Add Item Modal */}
       <Modal
         open={showAddModal}
-        onClose={() => { setShowAddModal(false); setScannedData(null); reset() }}
+        onClose={closeModal}
         title={scannedData ? 'Add scanned item' : 'Add pantry item'}
       >
         {scannedData && (
           <div className="mb-4 bg-green-500/10 border border-green-500/20 rounded-xl p-3 text-sm">
-            <p className="text-green-400 font-medium">Barcode found: <span className="font-mono">{scannedData.code}</span></p>
+            <p className="text-green-400 font-medium">
+              Barcode found: <span className="font-mono">{scannedData.code}</span>
+            </p>
             {!scannedData.ingredient && (
               <p className="text-text-muted text-xs mt-1">Unknown product — please fill in the details below.</p>
             )}
@@ -213,10 +236,7 @@ export default function PantryPage() {
 
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1.5">Category</label>
-            <select
-              className="input-base"
-              {...register('category')}
-            >
+            <select className="input-base" {...register('category')}>
               {CATEGORIES.map((c) => (
                 <option key={c} value={c} className="bg-bg-elevated capitalize">{c}</option>
               ))}
@@ -234,23 +254,15 @@ export default function PantryPage() {
               />
             </div>
             <div className="flex-1">
-              <Input
-                label="Unit"
-                placeholder="e.g. pcs, g, ml"
-                {...register('unit')}
-              />
+              <Input label="Unit" placeholder="e.g. pcs, g, ml" {...register('unit')} />
             </div>
           </div>
 
           <div className="flex gap-2 pt-1">
-            <Button type="submit" variant="primary" className="flex-1">
+            <Button type="submit" variant="primary" className="flex-1" loading={saving}>
               Add to pantry
             </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => { setShowAddModal(false); setScannedData(null); reset() }}
-            >
+            <Button type="button" variant="ghost" onClick={closeModal}>
               Cancel
             </Button>
           </div>

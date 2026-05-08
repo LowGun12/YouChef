@@ -28,14 +28,15 @@ const categoryEmoji: Record<IngredientCategory, string> = {
 interface PantryCardProps {
   item: PantryItem
   onRemove: (id: string) => void
+  removing?: boolean
 }
 
-export default function PantryCard({ item, onRemove }: PantryCardProps) {
+export default function PantryCard({ item, onRemove, removing }: PantryCardProps) {
   return (
     <motion.div
       layout
       initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
+      animate={{ opacity: removing ? 0.4 : 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
       className="pantry-card group flex items-center gap-3"
     >
@@ -53,10 +54,12 @@ export default function PantryCard({ item, onRemove }: PantryCardProps) {
 
       <button
         onClick={() => onRemove(item.id)}
+        disabled={removing}
         className={cn(
           'p-1.5 rounded-lg text-text-muted transition-all duration-200',
           'opacity-0 group-hover:opacity-100',
           'hover:text-red-400 hover:bg-red-500/10',
+          removing && 'opacity-50 cursor-wait',
         )}
         aria-label={`Remove ${item.name}`}
       >

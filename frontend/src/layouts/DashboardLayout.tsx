@@ -1,10 +1,20 @@
+import { useEffect } from 'react'
 import { Outlet, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import Navbar from './Navbar'
 import { useAuthStore } from '@/stores/authStore'
+import { usePantryStore } from '@/stores/pantryStore'
+import { pantryService } from '@/services/pantry.service'
 
 export default function DashboardLayout() {
   const { isAuthenticated } = useAuthStore()
+  const { setItems } = usePantryStore()
+
+  // Fetch pantry once per session and populate the global store
+  useEffect(() => {
+    if (!isAuthenticated) return
+    pantryService.getItems().then(setItems).catch(() => {})
+  }, [isAuthenticated])
 
   if (!isAuthenticated) return <Navigate to="/login" replace />
 

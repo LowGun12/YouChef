@@ -1,12 +1,13 @@
 import { useState, useMemo } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft, Clock, Users, ChefHat, Bookmark, BookmarkCheck,
-  CheckCircle2, XCircle, Timer, Flame
+  CheckCircle2, XCircle, Timer, AlertTriangle,
 } from 'lucide-react'
 import { usePantryStore } from '@/stores/pantryStore'
-import { mockRecipes, mockPantryItems } from '@/utils/mockData'
+import { recipesService } from '@/services/recipes.service'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
@@ -14,22 +15,77 @@ import { cn } from '@/utils/cn'
 export default function RecipeDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { items } = usePantryStore()
-  const [saved, setSaved] = useState(false)
+  const qc = useQueryClient()
+  const { items: pantryItems } = usePantryStore()
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())
 
-  const recipe = mockRecipes.find((r) => r.id === id)
-  const pantryItems = items.length > 0 ? items : mockPantryItems
+  const { data: recipe, isLoading, isError } = useQuery({
+    queryKey: ['recipe', id],
+    queryFn: () => recipesService.getById(id!),
+    enabled: !!id,
+  })
+
+  const saveMutation = useMutation({
+    mutationFn: (recipeId: string) => recipesService.saveRecipe(recipeId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['recipes', 'saved'] }),
+  })
+  const unsaveMutation = useMutation({
+    mutationFn: (recipeId: string) => recipesService.unsaveRecipe(recipeId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['recipes', 'saved'] }),
+  })
+
+  const [saved, setSaved] = useState(false)
 
   const pantryNames = useMemo(
     () => pantryItems.map((i) => i.name.toLowerCase()),
     [pantryItems],
   )
 
-  if (!recipe) {
+  const toggleSave = () => {
+    if (saved) {
+      unsaveMutation.mutate(id!)
+    } else {
+      saveMutation.mutate(id!)
+    }
+    setSaved(!saved)
+  }
+
+  const toggleStep = (order: number) => {
+    setCompletedSteps((prev) => {
+      const next = new Set(prev)
+      next.has(order) ? next.delete(order) : next.add(order)
+      return next
+    })
+  }
+
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <div className="animate-fade-in max-w-2xl mx-auto">
+        <div className="skeleton h-6 w-16 mb-5 rounded-xl" />
+        <div className="skeleton rounded-3xl aspect-[16/9] mb-6" />
+        <div className="space-y-3 mb-6">
+          <div className="skeleton h-8 w-2/3 rounded-xl" />
+          <div className="skeleton h-4 w-full rounded-xl" />
+          <div className="skeleton h-4 w-3/4 rounded-xl" />
+        </div>
+        <div className="space-y-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="skeleton h-12 rounded-xl" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (isError || !recipe) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <p className="text-text-muted mb-4">Recipe not found</p>
+        <div className="w-14 h-14 bg-bg-elevated rounded-2xl flex items-center justify-center mb-4">
+          <AlertTriangle size={28} className="text-text-muted" />
+        </div>
+        <p className="text-text-secondary font-medium mb-1">Recipe not found</p>
+        <p className="text-sm text-text-muted mb-4">It may have been deleted or the link is invalid.</p>
         <Link to="/recipes"><Button variant="secondary">Back to recipes</Button></Link>
       </div>
     )
@@ -46,14 +102,6 @@ export default function RecipeDetailPage() {
   const requiredCount = ingredientStatus.filter((i) => !i.optional).length
   const canMake = haveCount === requiredCount
   const matchPct = requiredCount > 0 ? Math.round((haveCount / requiredCount) * 100) : 100
-
-  const toggleStep = (order: number) => {
-    setCompletedSteps((prev) => {
-      const next = new Set(prev)
-      next.has(order) ? next.delete(order) : next.add(order)
-      return next
-    })
-  }
 
   const difficultyColor = { easy: 'green', medium: 'orange', hard: 'red' } as const
 
@@ -78,7 +126,7 @@ export default function RecipeDetailPage() {
           </div>
         )}
 
-        {/* Status overlay */}
+        {/* Pantry match badge */}
         <div className="absolute bottom-3 left-3">
           {canMake ? (
             <span className="flex items-center gap-1.5 bg-green-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-glow">
@@ -93,7 +141,8 @@ export default function RecipeDetailPage() {
 
         {/* Save button */}
         <button
-          onClick={() => setSaved(!saved)}
+          onClick={toggleSave}
+          disabled={saveMutation.isPending || unsaveMutation.isPending}
           className={cn(
             'absolute top-3 right-3 p-2.5 rounded-xl backdrop-blur transition-all duration-200',
             saved ? 'bg-green-500 text-white shadow-glow' : 'bg-bg-surface/80 text-text-secondary hover:text-green-400',
@@ -107,7 +156,7 @@ export default function RecipeDetailPage() {
       <div className="mb-6">
         <div className="flex items-start justify-between gap-3 mb-2">
           <h1 className="text-2xl font-extrabold text-text-primary leading-tight">{recipe.title}</h1>
-          <Badge variant={difficultyColor[recipe.difficulty]} className="shrink-0 capitalize">
+          <Badge variant={difficultyColor[recipe.difficulty as keyof typeof difficultyColor] ?? 'neutral'} className="shrink-0 capitalize">
             {recipe.difficulty}
           </Badge>
         </div>
@@ -115,38 +164,28 @@ export default function RecipeDetailPage() {
 
         <div className="flex flex-wrap gap-4 text-sm text-text-muted">
           <span className="flex items-center gap-1.5">
-            <Clock size={14} className="text-green-400" />
-            Prep: {recipe.prepTime} min
+            <Clock size={14} className="text-green-400" /> Prep: {recipe.prepTime} min
           </span>
           <span className="flex items-center gap-1.5">
-            <Timer size={14} className="text-orange-400" />
-            Cook: {recipe.cookTime} min
+            <Timer size={14} className="text-orange-400" /> Cook: {recipe.cookTime} min
           </span>
           <span className="flex items-center gap-1.5">
-            <Users size={14} className="text-blue-400" />
-            {recipe.servings} servings
+            <Users size={14} className="text-blue-400" /> {recipe.servings} servings
           </span>
           <span className="flex items-center gap-1.5">
-            <ChefHat size={14} className="text-purple-400" />
-            {recipe.cuisine}
+            <ChefHat size={14} className="text-purple-400" /> {recipe.cuisine}
           </span>
         </div>
       </div>
 
-      {/* Nutrition */}
-      {recipe.nutrition && (
-        <div className="grid grid-cols-5 gap-2 mb-8">
-          {[
-            { label: 'Calories', value: recipe.nutrition.calories, unit: '' },
-            { label: 'Protein', value: recipe.nutrition.protein, unit: 'g' },
-            { label: 'Carbs', value: recipe.nutrition.carbs, unit: 'g' },
-            { label: 'Fat', value: recipe.nutrition.fat, unit: 'g' },
-            { label: 'Fiber', value: recipe.nutrition.fiber, unit: 'g' },
-          ].map((n) => (
-            <div key={n.label} className="bg-bg-surface border border-border rounded-xl p-3 text-center">
-              <p className="text-base font-bold text-text-primary">{n.value}{n.unit}</p>
-              <p className="text-xs text-text-muted mt-0.5">{n.label}</p>
-            </div>
+      {/* Allergen / dietary badges */}
+      {(recipe.allergens?.length > 0 || recipe.dietary?.length > 0) && (
+        <div className="flex flex-wrap gap-2 mb-6">
+          {recipe.allergens?.map((a) => (
+            <Badge key={a} variant="red" size="sm" className="capitalize">⚠ {a}</Badge>
+          ))}
+          {recipe.dietary?.map((d) => (
+            <Badge key={d} variant="green" size="sm" className="capitalize">{d}</Badge>
           ))}
         </div>
       )}
@@ -180,8 +219,8 @@ export default function RecipeDetailPage() {
                 ing.have
                   ? 'bg-green-500/5 border-green-500/15'
                   : ing.optional
-                  ? 'bg-bg-surface border-border opacity-60'
-                  : 'bg-red-500/5 border-red-500/10',
+                    ? 'bg-bg-surface border-border opacity-60'
+                    : 'bg-red-500/5 border-red-500/10',
               )}
             >
               {ing.have ? (
@@ -192,9 +231,7 @@ export default function RecipeDetailPage() {
               <span className="flex-1 text-sm text-text-primary">
                 {ing.quantity} {ing.unit} {ing.name}
               </span>
-              {ing.optional && (
-                <span className="text-xs text-text-muted">optional</span>
-              )}
+              {ing.optional && <span className="text-xs text-text-muted">optional</span>}
             </li>
           ))}
         </ul>
@@ -222,9 +259,7 @@ export default function RecipeDetailPage() {
                 onClick={() => toggleStep(step.order)}
                 className={cn(
                   'w-full text-left flex gap-4 p-4 rounded-2xl border transition-all duration-200',
-                  done
-                    ? 'bg-green-500/10 border-green-500/20'
-                    : 'bg-bg-surface border-border hover:border-border-strong',
+                  done ? 'bg-green-500/10 border-green-500/20' : 'bg-bg-surface border-border hover:border-border-strong',
                 )}
               >
                 <div
@@ -249,7 +284,7 @@ export default function RecipeDetailPage() {
             )
           })}
         </div>
-        {completedSteps.size === recipe.instructions.length && (
+        {completedSteps.size === recipe.instructions.length && recipe.instructions.length > 0 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -262,8 +297,8 @@ export default function RecipeDetailPage() {
       </section>
 
       {/* Tags */}
-      {recipe.tags.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+      {recipe.tags?.length > 0 && (
+        <div className="flex flex-wrap gap-2 pb-6">
           {recipe.tags.map((tag) => (
             <Badge key={tag} variant="neutral" size="md" className="capitalize">#{tag}</Badge>
           ))}

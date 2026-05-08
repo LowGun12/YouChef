@@ -66,7 +66,7 @@ export default function RegisterPage() {
             <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-glow">
               <ChefHat size={22} className="text-white" />
             </div>
-            <span className="text-2xl font-extrabold tracking-tight">UCook</span>
+            <span className="text-2xl font-extrabold tracking-tight">YouChef</span>
           </Link>
           <p className="text-text-secondary mt-2 text-sm">Create your free account</p>
         </div>

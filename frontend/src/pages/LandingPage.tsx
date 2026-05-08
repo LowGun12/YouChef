@@ -44,7 +44,7 @@ export default function LandingPage() {
             <div className="w-7 h-7 bg-gradient-to-br from-green-500 to-orange-500 rounded-lg flex items-center justify-center shadow-glow">
               <ChefHat size={14} className="text-white" />
             </div>
-            <span className="font-bold text-base tracking-tight">UCook</span>
+            <span className="font-bold text-base tracking-tight">YouChef</span>
           </div>
           <div className="flex items-center gap-2">
             <Link to="/login">
@@ -80,7 +80,7 @@ export default function LandingPage() {
             </h1>
 
             <p className="text-lg text-text-secondary max-w-xl mx-auto mb-10 leading-relaxed">
-              UCook tracks your pantry and suggests recipes you can make right now.
+              YouChef tracks your pantry and suggests recipes you can make right now.
               No more staring at the fridge wondering what to cook.
             </p>
 
@@ -144,7 +144,7 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="gradient-border rounded-3xl p-8 text-center"
           >
-            <h2 className="text-2xl font-extrabold mb-8">Why UCook?</h2>
+            <h2 className="text-2xl font-extrabold mb-8">Why YouChef?</h2>
             <ul className="space-y-3 text-left max-w-sm mx-auto">
               {perks.map((perk) => (
                 <li key={perk} className="flex items-center gap-3 text-sm text-text-secondary">
@@ -166,7 +166,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-border py-8 px-4 text-center text-sm text-text-muted">
-        <p>© {new Date().getFullYear()} UCook. Made with ❤️ for home cooks.</p>
+        <p>© {new Date().getFullYear()} YouChef. Made with ❤️ for home cooks.</p>
       </footer>
     </div>
   )

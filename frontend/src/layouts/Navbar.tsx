@@ -29,7 +29,7 @@ export default function Navbar() {
           <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-orange-500 rounded-xl flex items-center justify-center shadow-glow">
             <ChefHat size={16} className="text-white" />
           </div>
-          <span className="font-bold text-lg tracking-tight text-text-primary">UCook</span>
+          <span className="font-bold text-lg tracking-tight text-text-primary">YouChef</span>
         </Link>
 
         {/* Nav links */}
