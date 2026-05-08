@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChefHat, ArrowRight, ArrowLeft, Check, AlertTriangle, Salad, Globe } from 'lucide-react'
 import { ALLERGENS, DIETARY_OPTIONS, CUISINE_OPTIONS } from '@/types'
@@ -95,11 +95,7 @@ export default function OnboardingPage() {
   const [cuisines, setCuisines] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
 
-  // Redirect if not authenticated
-  if (!isAuthenticated) {
-    navigate('/login', { replace: true })
-    return null
-  }
+  if (!isAuthenticated) return <Navigate to="/login" replace />
 
   const currentStep = STEPS[step]
 

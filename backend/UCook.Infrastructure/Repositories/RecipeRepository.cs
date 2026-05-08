@@ -10,7 +10,11 @@ public class RecipeRepository(AppDbContext db) : IRecipeRepository
     public async Task<(List<Recipe> Items, int Total)> GetAllAsync(
         string? search, string? cuisine, string? difficulty, int page, int pageSize)
     {
-        var query = db.Recipes.Include(r => r.Ingredients).Include(r => r.Steps).AsQueryable();
+        var query = db.Recipes
+            .AsNoTracking()
+            .Include(r => r.Ingredients)
+            .Include(r => r.Steps)
+            .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(r => r.Title.Contains(search));
@@ -31,18 +35,21 @@ public class RecipeRepository(AppDbContext db) : IRecipeRepository
 
     public Task<Recipe?> GetByIdAsync(Guid id) =>
         db.Recipes
+            .AsNoTracking()
             .Include(r => r.Ingredients)
             .Include(r => r.Steps)
             .FirstOrDefaultAsync(r => r.Id == id);
 
     public Task<List<Recipe>> GetAllWithIngredientsAsync() =>
         db.Recipes
+            .AsNoTracking()
             .Include(r => r.Ingredients)
             .Include(r => r.Steps)
             .ToListAsync();
 
     public Task<List<Recipe>> GetSavedAsync(Guid userId) =>
         db.SavedRecipes
+            .AsNoTracking()
             .Where(s => s.UserId == userId)
             .Include(s => s.Recipe).ThenInclude(r => r.Ingredients)
             .Include(s => s.Recipe).ThenInclude(r => r.Steps)

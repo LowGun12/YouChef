@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus, Trash2, ChefHat, ClipboardPaste, FormInput,
-  ArrowLeft, GripVertical, Clock, Users, ImageIcon,
+  ArrowLeft, Clock, Users, ImageIcon,
 } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
